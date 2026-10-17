@@ -1,0 +1,28 @@
+jadwal-kegiatan/
+├── src
+│   ├── adapter
+│   │   ├── presenter
+│   │   │   └── ActivityPresenter.java
+│   │   └── repository
+│   │       ├── ActivityRepository.java
+│   │       └── InMemoryRepository.java
+│   ├── domain
+│   │   ├── entity
+│   │   │   ├── Activity.java
+│   │   │   └── SortOption.java
+│   │   ├── exception
+│   │   │   ├── DomainException.java
+│   │   │   ├── EntityNotFoundException.java
+│   │   │   └── ValidationException.java
+│   │   └── repository
+│   │       ├── IActivityRepository.java
+│   │       └── IRepository.java
+│   ├── framework
+│   │   ├── util
+│   │   │   └── InputUtil.java
+│   │   └── view
+│   │       └── ActivityView.java
+│   ├── usecase
+│   │   └── ActivityUseCase.java
+│   └── App.java
+└── .gitignore

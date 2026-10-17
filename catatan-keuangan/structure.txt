@@ -1,0 +1,29 @@
+catatan-keuangan/
+├── src
+│   ├── adapter
+│   │   ├── presenter
+│   │   │   └── FinancePresenter.java
+│   │   └── repository
+│   │       ├── InMemoryRepository.java
+│   │       └── TransactionRepository.java
+│   ├── domain
+│   │   ├── entity
+│   │   │   ├── SortOption.java
+│   │   │   ├── Transaction.java
+│   │   │   └── TransactionType.java
+│   │   ├── exception
+│   │   │   ├── DomainException.java
+│   │   │   ├── EntityNotFoundException.java
+│   │   │   └── ValidationException.java
+│   │   └── repository
+│   │       ├── IRepository.java
+│   │       └── ITransactionRepository.java
+│   ├── framework
+│   │   ├── util
+│   │   │   └── InputUtil.java
+│   │   └── view
+│   │       └── FinanceView.java
+│   ├── usecase
+│   │   └── FinanceUseCase.java
+│   └── App.java
+└── .gitignore

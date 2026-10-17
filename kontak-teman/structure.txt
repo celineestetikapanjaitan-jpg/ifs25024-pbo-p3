@@ -1,0 +1,28 @@
+kontak-teman/
+├── src
+│   ├── adapter
+│   │   ├── presenter
+│   │   │   └── ContactPresenter.java
+│   │   └── repository
+│   │       ├── ContactRepository.java
+│   │       └── InMemoryRepository.java
+│   ├── domain
+│   │   ├── entity
+│   │   │   ├── Contact.java
+│   │   │   └── SortOption.java
+│   │   ├── exception
+│   │   │   ├── DomainException.java
+│   │   │   ├── EntityNotFoundException.java
+│   │   │   └── ValidationException.java
+│   │   └── repository
+│   │       ├── IContactRepository.java
+│   │       └── IRepository.java
+│   ├── framework
+│   │   ├── util
+│   │   │   └── InputUtil.java
+│   │   └── view
+│   │       └── ContactView.java
+│   ├── usecase
+│   │   └── ContactUseCase.java
+│   └── App.java
+└── .gitignore
