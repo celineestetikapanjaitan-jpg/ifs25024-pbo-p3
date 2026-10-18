@@ -14,8 +14,10 @@ import java.util.function.Predicate;
  * @param <ID> tipe data identifier unik entitas
  */
 public abstract class InMemoryRepository<T, ID> implements IRepository<T, ID> {
+    /** Penyimpanan data entitas di memori. */
     protected final List<T> data = new ArrayList<>();
 
+    /** Fungsi untuk mengekstrak ID dari objek entitas. */
     private final Function<T, ID> idExtractor;
 
     protected InMemoryRepository(Function<T, ID> idExtractor) {

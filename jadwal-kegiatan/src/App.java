@@ -10,6 +10,7 @@ import usecase.ActivityUseCase;
  * yang mengetahui implementasi konkret dari setiap interface.
  */
 public class App {
+    /** Menyusun seluruh dependency lalu menjalankan loop menu aplikasi. */
     public static void main(String[] args) {
         IActivityRepository activityRepository = new ActivityRepository();
         ActivityUseCase activityUseCase = new ActivityUseCase(activityRepository);

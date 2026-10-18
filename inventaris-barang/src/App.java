@@ -10,6 +10,7 @@ import usecase.ItemUseCase;
  * yang mengetahui implementasi konkret dari setiap interface.
  */
 public class App {
+    /** Menyusun seluruh dependency lalu menjalankan loop menu aplikasi. */
     public static void main(String[] args) {
         IItemRepository itemRepository = new ItemRepository();
         ItemUseCase itemUseCase = new ItemUseCase(itemRepository);

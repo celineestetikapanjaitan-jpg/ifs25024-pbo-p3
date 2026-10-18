@@ -5,6 +5,7 @@ import domain.exception.EntityNotFoundException;
 import domain.exception.ValidationException;
 import domain.repository.IGuestRepository;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Use case yang menangani logika bisnis buku tamu.
@@ -12,6 +13,12 @@ import java.util.List;
  * domain jika operasi tidak valid atau data tidak ditemukan.
  */
 public class GuestUseCase {
+    /** Pesan validasi: nama tamu tidak boleh kosong. */
+    private static final String ERR_NAME_EMPTY = "Nama tamu tidak boleh kosong";
+
+    /** Pesan validasi: tujuan kunjungan tidak boleh kosong. */
+    private static final String ERR_PURPOSE_EMPTY = "Tujuan kunjungan tidak boleh kosong";
+
     /** Port repository yang di-inject dari luar (Dependency Inversion). */
     private final IGuestRepository guestRepository;
 
@@ -26,12 +33,8 @@ public class GuestUseCase {
 
     /** Mendaftarkan tamu baru setelah validasi nama dan tujuan. */
     public Guest registerGuest(String name, String purpose) throws ValidationException {
-        if (name == null || name.trim().isEmpty()) {
-            throw new ValidationException("Nama tamu tidak boleh kosong");
-        }
-        if (purpose == null || purpose.trim().isEmpty()) {
-            throw new ValidationException("Tujuan kunjungan tidak boleh kosong");
-        }
+        requireFilled(name, ERR_NAME_EMPTY);
+        requireFilled(purpose, ERR_PURPOSE_EMPTY);
         return guestRepository.save(name, purpose);
     }
 
@@ -45,7 +48,14 @@ public class GuestUseCase {
 
     /** Mencari tamu yang namanya mengandung kata kunci (case-insensitive). */
     public List<Guest> searchGuests(String keyword) {
-        String lowerKeyword = keyword.toLowerCase();
-        return guestRepository.findBy(guest -> guest.getName().toLowerCase().contains(lowerKeyword));
+        String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
+        return guestRepository.findBy(guest -> guest.getName().toLowerCase(Locale.ROOT).contains(lowerKeyword));
+    }
+
+    /** Memastikan nilai tidak null/kosong; melempar {@link ValidationException} jika tidak. */
+    private void requireFilled(String value, String message) throws ValidationException {
+        if (value == null || value.trim().isEmpty()) {
+            throw new ValidationException(message);
+        }
     }
 }

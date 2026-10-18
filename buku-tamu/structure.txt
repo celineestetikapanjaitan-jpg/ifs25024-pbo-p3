@@ -24,4 +24,13 @@ buku-tamu/
 │   ├── usecase
 │   │   └── GuestUseCase.java
 │   └── App.java
-└── .gitignore
+├── test
+│   └── usecase
+│       └── GuestUseCaseTest.java
+├── test-cases
+│   ├── TC-01.tc
+│   ├── TC-02.tc
+│   ├── TC-03.tc
+│   └── TC-04.tc
+├── .gitignore
+└── structure.txt

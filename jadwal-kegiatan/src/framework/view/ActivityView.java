@@ -5,6 +5,8 @@ import domain.entity.SortOption;
 import domain.exception.EntityNotFoundException;
 import domain.exception.ValidationException;
 import framework.util.InputUtil;
+import java.util.Map;
+import java.util.Optional;
 import usecase.ActivityUseCase;
 
 /**
@@ -13,6 +15,34 @@ import usecase.ActivityUseCase;
  * Layer ini tidak mengandung logika bisnis - hanya menangani interaksi user.
  */
 public class ActivityView {
+    /** Input yang membatalkan operasi pada sebuah form. */
+    private static final String CANCEL_INPUT = "x";
+
+    /** Input pada menu utama untuk keluar dari aplikasi. */
+    private static final String MENU_EXIT = "x";
+
+    /** Kode pilihan menu utama: tambah. */
+    private static final String MENU_ADD = "1";
+
+    /** Kode pilihan menu utama: ubah. */
+    private static final String MENU_UPDATE = "2";
+
+    /** Kode pilihan menu utama: cari. */
+    private static final String MENU_SEARCH = "3";
+
+    /** Kode pilihan menu utama: urutkan. */
+    private static final String MENU_SORT = "4";
+
+    /** Kode pilihan menu utama: hapus. */
+    private static final String MENU_REMOVE = "5";
+
+    /** Pilihan menu pengurutan beserta opsi pengurutan domain yang dipetakan. */
+    private static final Map<String, SortOption> SORT_OPTIONS = Map.of(
+            "1", SortOption.DAY,
+            "2", SortOption.TIME,
+            "3", SortOption.TITLE_ASC,
+            "4", SortOption.TITLE_DESC);
+
     /** Use case yang menjalankan operasi bisnis. */
     private final ActivityUseCase activityUseCase;
 
@@ -35,12 +65,12 @@ public class ActivityView {
             String input = InputUtil.input("Pilih");
             System.out.println();
             switch (input) {
-                case "1" -> addActivity();
-                case "2" -> updateActivity();
-                case "3" -> searchActivity();
-                case "4" -> sortActivity();
-                case "5" -> removeActivity();
-                case "x" -> running = false;
+                case MENU_ADD -> addActivity();
+                case MENU_UPDATE -> updateActivity();
+                case MENU_SEARCH -> searchActivity();
+                case MENU_SORT -> sortActivity();
+                case MENU_REMOVE -> removeActivity();
+                case MENU_EXIT -> running = false;
                 default -> presenter.showInvalidChoice();
             }
 
@@ -65,17 +95,17 @@ public class ActivityView {
     private void addActivity() {
         System.out.println("[Menambah Kegiatan]");
         String title = InputUtil.input("Judul (x Jika Batal)");
-        if (title.equals("x") || title.isBlank()) {
+        if (title.equals(CANCEL_INPUT) || title.isBlank()) {
             return;
         }
 
         String day = InputUtil.input("Hari (x Jika Batal)");
-        if (day.equals("x") || day.isBlank()) {
+        if (day.equals(CANCEL_INPUT) || day.isBlank()) {
             return;
         }
 
         String time = InputUtil.input("Waktu (x Jika Batal)");
-        if (time.equals("x") || time.isBlank()) {
+        if (time.equals(CANCEL_INPUT) || time.isBlank()) {
             return;
         }
 
@@ -91,7 +121,7 @@ public class ActivityView {
         System.out.println("[Mengubah Kegiatan]");
         String strId = InputUtil.input("ID Kegiatan yang diubah (x Jika Batal)");
 
-        if (strId.equals("x")) {
+        if (strId.equals(CANCEL_INPUT)) {
             return;
         }
 
@@ -124,7 +154,7 @@ public class ActivityView {
         System.out.println("[Menghapus Kegiatan]");
         String strId = InputUtil.input("[ID Kegiatan] yang dihapus (x Jika Batal)");
 
-        if (strId.equals("x")) {
+        if (strId.equals(CANCEL_INPUT)) {
             return;
         }
 
@@ -144,7 +174,7 @@ public class ActivityView {
         System.out.println("[Mencari Kegiatan]");
         String keyword = InputUtil.input("Kata Kunci (x Jika Batal)");
 
-        if (!keyword.equals("x")) {
+        if (!keyword.equals(CANCEL_INPUT)) {
             presenter.showSearchResults(activityUseCase.searchActivities(keyword), keyword);
         }
     }
@@ -162,18 +192,14 @@ public class ActivityView {
         String input = InputUtil.input("Pilih");
         // Akhiri baris prompt agar hasil pengurutan tampil di baris berikutnya
         System.out.println();
-        if (input.equals("x")) {
+        if (input.equals(CANCEL_INPUT)) {
             return;
         }
 
-        // Konversi input angka ke enum domain
-        SortOption option = mapSortOption(input);
-        if (option == null) {
-            presenter.showInvalidSortOption();
-            return;
-        }
-
-        presenter.showSortedActivities(activityUseCase.sortActivities(option));
+        // Konversi input angka ke enum domain; pilihan tidak dikenal ditolak
+        mapSortOption(input).ifPresentOrElse(
+                option -> presenter.showSortedActivities(activityUseCase.sortActivities(option)),
+                presenter::showInvalidSortOption);
     }
 
     /**
@@ -194,14 +220,12 @@ public class ActivityView {
         return value.isBlank() ? null : value;
     }
 
-    /** Memetakan pilihan menu (1-4) ke {@link SortOption} domain. */
-    private SortOption mapSortOption(String input) {
-        return switch (input) {
-            case "1" -> SortOption.DAY;
-            case "2" -> SortOption.TIME;
-            case "3" -> SortOption.TITLE_ASC;
-            case "4" -> SortOption.TITLE_DESC;
-            default -> null;
-        };
+    /**
+     * Memetakan pilihan menu pengurutan ke {@link SortOption} domain.
+     *
+     * @return opsi pengurutan, atau kosong jika pilihan tidak dikenali
+     */
+    private Optional<SortOption> mapSortOption(String input) {
+        return Optional.ofNullable(SORT_OPTIONS.get(input));
     }
 }

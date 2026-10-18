@@ -10,6 +10,7 @@ import usecase.GuestUseCase;
  * yang mengetahui implementasi konkret dari setiap interface.
  */
 public class App {
+    /** Menyusun seluruh dependency lalu menjalankan loop menu aplikasi. */
     public static void main(String[] args) {
         // Layer adapter: implementasi konkret repository (penyimpanan in-memory)
         IGuestRepository guestRepository = new GuestRepository();

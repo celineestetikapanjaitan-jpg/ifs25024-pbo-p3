@@ -6,6 +6,8 @@ import domain.entity.SortOption;
 import domain.exception.EntityNotFoundException;
 import domain.exception.ValidationException;
 import framework.util.InputUtil;
+import java.util.Map;
+import java.util.Optional;
 import usecase.ItemUseCase;
 
 /**
@@ -13,7 +15,37 @@ import usecase.ItemUseCase;
  * Menerima input user, memanggil use case, dan menangani exception domain secara terstruktur.
  */
 public class ItemView {
+    /** Input yang membatalkan operasi pada sebuah form. */
+    private static final String CANCEL_INPUT = "x";
+
+    /** Input pada menu utama untuk keluar dari aplikasi. */
+    private static final String MENU_EXIT = "x";
+
+    /** Kode pilihan menu utama: tambah. */
+    private static final String MENU_ADD = "1";
+
+    /** Kode pilihan menu utama: ubah stok. */
+    private static final String MENU_UPDATE_STOCK = "2";
+
+    /** Kode pilihan menu utama: cari. */
+    private static final String MENU_SEARCH = "3";
+
+    /** Kode pilihan menu utama: urutkan. */
+    private static final String MENU_SORT = "4";
+
+    /** Kode pilihan menu utama: hapus. */
+    private static final String MENU_REMOVE = "5";
+
+    /** Pilihan menu pengurutan beserta opsi pengurutan domain yang dipetakan. */
+    private static final Map<String, SortOption> SORT_OPTIONS = Map.of(
+            "1", SortOption.NAME_ASC,
+            "2", SortOption.NAME_DESC,
+            "3", SortOption.QUANTITY_ASC,
+            "4", SortOption.QUANTITY_DESC);
+
+    /** Use case yang menjalankan operasi bisnis. */
     private final ItemUseCase itemUseCase;
+    /** Presenter yang memformat hasil ke output layar. */
     private final ItemPresenter presenter;
 
     public ItemView(ItemUseCase itemUseCase, ItemPresenter presenter) {
@@ -21,6 +53,7 @@ public class ItemView {
         this.presenter = presenter;
     }
 
+    /** Menampilkan menu utama dan loop interaksi user. */
     public void show() {
         boolean running = true;
         while (running) {
@@ -30,12 +63,12 @@ public class ItemView {
             String input = InputUtil.input("Pilih");
             System.out.println();
             switch (input) {
-                case "1" -> addItem();
-                case "2" -> updateStock();
-                case "3" -> searchItem();
-                case "4" -> sortItem();
-                case "5" -> removeItem();
-                case "x" -> running = false;
+                case MENU_ADD -> addItem();
+                case MENU_UPDATE_STOCK -> updateStock();
+                case MENU_SEARCH -> searchItem();
+                case MENU_SORT -> sortItem();
+                case MENU_REMOVE -> removeItem();
+                case MENU_EXIT -> running = false;
                 default -> presenter.showInvalidChoice();
             }
 
@@ -45,6 +78,7 @@ public class ItemView {
         }
     }
 
+    /** Mencetak opsi menu ke layar. */
     private void printMenu() {
         System.out.println("Menu:");
         System.out.println("1. Tambah");
@@ -55,15 +89,16 @@ public class ItemView {
         System.out.println("x. Keluar");
     }
 
+    /** Form tambah barang baru. */
     private void addItem() {
         System.out.println("[Menambah Barang]");
         String name = InputUtil.input("Nama (x Jika Batal)");
-        if (name.equals("x")) {
+        if (name.equals(CANCEL_INPUT)) {
             return;
         }
 
         String strQuantity = InputUtil.input("Jumlah");
-        if (strQuantity.equals("x")) {
+        if (strQuantity.equals(CANCEL_INPUT)) {
             return;
         }
 
@@ -76,7 +111,7 @@ public class ItemView {
         }
 
         String category = InputUtil.input("Kategori (x Jika Batal)");
-        if (category.equals("x")) {
+        if (category.equals(CANCEL_INPUT)) {
             return;
         }
 
@@ -84,14 +119,15 @@ public class ItemView {
             Item item = itemUseCase.addItem(name, quantity, category);
             presenter.showAddSuccess(item);
         } catch (ValidationException e) {
-            presenter.showError(e.getMessage());
+            presenter.showValidationError(e.getMessage());
         }
     }
 
+    /** Form ubah stok barang berdasarkan ID; stok dikosongkan berarti tidak diubah. */
     private void updateStock() {
         System.out.println("[Mengubah Stok]");
         String strId = InputUtil.input("ID Barang yang diubah (x Jika Batal)");
-        if (strId.equals("x")) {
+        if (strId.equals(CANCEL_INPUT)) {
             return;
         }
 
@@ -121,18 +157,20 @@ public class ItemView {
         } catch (EntityNotFoundException e) {
             presenter.showUpdateFailed(e.getId());
         } catch (ValidationException e) {
-            presenter.showError(e.getMessage());
+            presenter.showValidationError(e.getMessage());
         }
     }
 
+    /** Form cari barang berdasarkan kata kunci nama. */
     private void searchItem() {
         System.out.println("[Mencari Barang]");
         String keyword = InputUtil.input("Kata Kunci (x Jika Batal)");
-        if (!keyword.equals("x")) {
+        if (!keyword.equals(CANCEL_INPUT)) {
             presenter.showSearchResults(itemUseCase.searchItems(keyword), keyword);
         }
     }
 
+    /** Form urutkan barang berdasarkan pilihan user. */
     private void sortItem() {
         System.out.println("[Mengurutkan Barang]");
         System.out.println("Pilihan Pengurutan:");
@@ -144,23 +182,21 @@ public class ItemView {
 
         String input = InputUtil.input("Pilih");
         System.out.println();
-        if (input.equals("x")) {
+        if (input.equals(CANCEL_INPUT)) {
             return;
         }
 
-        SortOption option = mapSortOption(input);
-        if (option == null) {
-            presenter.showInvalidSortOption();
-            return;
-        }
-
-        presenter.showSortedItems(itemUseCase.sortItems(option));
+        // Konversi input angka ke enum domain; pilihan tidak dikenal ditolak
+        mapSortOption(input).ifPresentOrElse(
+                option -> presenter.showSortedItems(itemUseCase.sortItems(option)),
+                presenter::showInvalidSortOption);
     }
 
+    /** Form hapus barang berdasarkan ID. */
     private void removeItem() {
         System.out.println("[Menghapus Barang]");
         String strId = InputUtil.input("[ID Barang] yang dihapus (x Jika Batal)");
-        if (strId.equals("x")) {
+        if (strId.equals(CANCEL_INPUT)) {
             return;
         }
 
@@ -175,6 +211,11 @@ public class ItemView {
         }
     }
 
+    /**
+     * Mengonversi input menjadi jumlah stok berupa angka bulat lebih dari 0.
+     *
+     * @throws ValidationException jika input bukan angka atau tidak lebih dari 0
+     */
     private int parseQuantity(String value) throws ValidationException {
         try {
             int quantity = Integer.parseInt(value.trim());
@@ -187,6 +228,11 @@ public class ItemView {
         }
     }
 
+    /**
+     * Mengonversi input string menjadi ID.
+     *
+     * @throws ValidationException jika string bukan format angka
+     */
     private int parseId(String value) throws ValidationException {
         try {
             return Integer.parseInt(value.trim());
@@ -195,13 +241,12 @@ public class ItemView {
         }
     }
 
-    private SortOption mapSortOption(String input) {
-        return switch (input) {
-            case "1" -> SortOption.NAME_ASC;
-            case "2" -> SortOption.NAME_DESC;
-            case "3" -> SortOption.QUANTITY_ASC;
-            case "4" -> SortOption.QUANTITY_DESC;
-            default -> null;
-        };
+    /**
+     * Memetakan pilihan menu pengurutan ke {@link SortOption} domain.
+     *
+     * @return opsi pengurutan, atau kosong jika pilihan tidak dikenali
+     */
+    private Optional<SortOption> mapSortOption(String input) {
+        return Optional.ofNullable(SORT_OPTIONS.get(input));
     }
 }

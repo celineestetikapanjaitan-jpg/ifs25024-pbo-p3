@@ -7,6 +7,7 @@ import domain.repository.IItemRepository;
  * Implementasi repository barang menggunakan basis generic {@link InMemoryRepository}.
  */
 public class ItemRepository extends InMemoryRepository<Item, Integer> implements IItemRepository {
+    /** Penghitung ID otomatis, bertambah setiap kali data baru disimpan. */
     private int idCounter = 0;
 
     public ItemRepository() {
@@ -19,6 +20,7 @@ public class ItemRepository extends InMemoryRepository<Item, Integer> implements
         return save(item);
     }
 
+    /** Menghasilkan ID unik berikutnya. */
     private int nextId() {
         return ++idCounter;
     }

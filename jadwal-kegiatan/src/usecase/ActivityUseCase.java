@@ -6,6 +6,7 @@ import domain.exception.EntityNotFoundException;
 import domain.exception.ValidationException;
 import domain.repository.IActivityRepository;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -14,6 +15,15 @@ import java.util.Optional;
  * domain jika operasi tidak valid atau data tidak ditemukan.
  */
 public class ActivityUseCase {
+    /** Pesan validasi: judul kegiatan tidak boleh kosong. */
+    private static final String ERR_TITLE_EMPTY = "Judul kegiatan tidak boleh kosong";
+
+    /** Pesan validasi: hari tidak boleh kosong. */
+    private static final String ERR_DAY_EMPTY = "Hari tidak boleh kosong";
+
+    /** Pesan validasi: waktu tidak boleh kosong. */
+    private static final String ERR_TIME_EMPTY = "Waktu tidak boleh kosong";
+
     /** Port repository yang di-inject dari luar (Dependency Inversion). */
     private final IActivityRepository activityRepository;
 
@@ -28,9 +38,9 @@ public class ActivityUseCase {
 
     /** Menambahkan kegiatan baru setelah validasi judul, hari, dan waktu. */
     public Activity addActivity(String title, String day, String time) throws ValidationException {
-        requireFilled(title, "Judul kegiatan tidak boleh kosong");
-        requireFilled(day, "Hari tidak boleh kosong");
-        requireFilled(time, "Waktu tidak boleh kosong");
+        requireFilled(title, ERR_TITLE_EMPTY);
+        requireFilled(day, ERR_DAY_EMPTY);
+        requireFilled(time, ERR_TIME_EMPTY);
         return activityRepository.save(title, day, time);
     }
 
@@ -55,13 +65,13 @@ public class ActivityUseCase {
 
         // Validasi semua field yang diubah sebelum ada perubahan yang diterapkan
         if (title != null) {
-            requireFilled(title, "Judul kegiatan tidak boleh kosong");
+            requireFilled(title, ERR_TITLE_EMPTY);
         }
         if (day != null) {
-            requireFilled(day, "Hari tidak boleh kosong");
+            requireFilled(day, ERR_DAY_EMPTY);
         }
         if (time != null) {
-            requireFilled(time, "Waktu tidak boleh kosong");
+            requireFilled(time, ERR_TIME_EMPTY);
         }
 
         Activity activity = found.get();
@@ -80,9 +90,9 @@ public class ActivityUseCase {
 
     /** Mencari kegiatan yang judulnya mengandung kata kunci (case-insensitive). */
     public List<Activity> searchActivities(String keyword) {
-        String lowerKeyword = keyword.toLowerCase();
+        String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
         return activityRepository.findBy(
-                activity -> activity.getTitle().toLowerCase().contains(lowerKeyword));
+                activity -> activity.getTitle().toLowerCase(Locale.ROOT).contains(lowerKeyword));
     }
 
     /** Mengurutkan kegiatan sesuai kriteria {@link SortOption} yang dipilih. */

@@ -25,4 +25,13 @@ kontak-teman/
 │   ├── usecase
 │   │   └── ContactUseCase.java
 │   └── App.java
-└── .gitignore
+├── test
+│   └── usecase
+│       └── ContactUseCaseTest.java
+├── test-cases
+│   ├── TC-01.tc
+│   ├── TC-02.tc
+│   ├── TC-03.tc
+│   └── TC-04.tc
+├── .gitignore
+└── structure.txt

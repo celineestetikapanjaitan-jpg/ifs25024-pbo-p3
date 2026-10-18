@@ -10,6 +10,7 @@ import usecase.ContactUseCase;
  * yang mengetahui implementasi konkret dari setiap interface.
  */
 public class App {
+    /** Menyusun seluruh dependency lalu menjalankan loop menu aplikasi. */
     public static void main(String[] args) {
         IContactRepository contactRepository = new ContactRepository();
         ContactUseCase contactUseCase = new ContactUseCase(contactRepository);

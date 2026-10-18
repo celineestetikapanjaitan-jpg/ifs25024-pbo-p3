@@ -6,6 +6,8 @@ import domain.entity.TransactionType;
 import domain.exception.EntityNotFoundException;
 import domain.exception.ValidationException;
 import framework.util.InputUtil;
+import java.util.Map;
+import java.util.Optional;
 import usecase.FinanceUseCase;
 
 /**
@@ -14,6 +16,37 @@ import usecase.FinanceUseCase;
  * Layer ini tidak mengandung logika bisnis - hanya menangani interaksi user.
  */
 public class FinanceView {
+    /** Input yang membatalkan operasi pada sebuah form. */
+    private static final String CANCEL_INPUT = "x";
+
+    /** Input pada menu utama untuk keluar dari aplikasi. */
+    private static final String MENU_EXIT = "x";
+
+    /** Kode pilihan menu utama: tambah pemasukan. */
+    private static final String MENU_ADD_INCOME = "1";
+
+    /** Kode pilihan menu utama: tambah pengeluaran. */
+    private static final String MENU_ADD_EXPENSE = "2";
+
+    /** Kode pilihan menu utama: cari. */
+    private static final String MENU_SEARCH = "3";
+
+    /** Kode pilihan menu utama: urutkan. */
+    private static final String MENU_SORT = "4";
+
+    /** Kode pilihan menu utama: lihat saldo. */
+    private static final String MENU_SHOW_BALANCE = "5";
+
+    /** Kode pilihan menu utama: hapus. */
+    private static final String MENU_REMOVE = "6";
+
+    /** Pilihan menu pengurutan beserta opsi pengurutan domain yang dipetakan. */
+    private static final Map<String, SortOption> SORT_OPTIONS = Map.of(
+            "1", SortOption.AMOUNT_ASC,
+            "2", SortOption.AMOUNT_DESC,
+            "3", SortOption.INCOME_FIRST,
+            "4", SortOption.EXPENSE_FIRST);
+
     /** Use case yang menjalankan operasi bisnis. */
     private final FinanceUseCase financeUseCase;
 
@@ -36,13 +69,13 @@ public class FinanceView {
             String input = InputUtil.input("Pilih");
             System.out.println();
             switch (input) {
-                case "1" -> addTransaction(TransactionType.INCOME);
-                case "2" -> addTransaction(TransactionType.EXPENSE);
-                case "3" -> searchTransaction();
-                case "4" -> sortTransaction();
-                case "5" -> presenter.showBalance(financeUseCase.getBalance());
-                case "6" -> removeTransaction();
-                case "x" -> running = false;
+                case MENU_ADD_INCOME -> addTransaction(TransactionType.INCOME);
+                case MENU_ADD_EXPENSE -> addTransaction(TransactionType.EXPENSE);
+                case MENU_SEARCH -> searchTransaction();
+                case MENU_SORT -> sortTransaction();
+                case MENU_SHOW_BALANCE -> presenter.showBalance(financeUseCase.getBalance());
+                case MENU_REMOVE -> removeTransaction();
+                case MENU_EXIT -> running = false;
                 default -> presenter.showInvalidChoice();
             }
 
@@ -73,7 +106,7 @@ public class FinanceView {
         }
 
         String description = InputUtil.input("Keterangan (x Jika Batal)");
-        if (description.equals("x")) {
+        if (description.equals(CANCEL_INPUT)) {
             return;
         }
 
@@ -92,7 +125,7 @@ public class FinanceView {
         System.out.println("[Hapus Transaksi]");
         String strId = InputUtil.input("ID Transaksi (x Jika Batal)");
 
-        if (strId.equals("x")) {
+        if (strId.equals(CANCEL_INPUT)) {
             return;
         }
 
@@ -112,7 +145,7 @@ public class FinanceView {
         System.out.println("[Cari Transaksi]");
         String keyword = InputUtil.input("Kata Kunci (x Jika Batal)");
 
-        if (!keyword.equals("x")) {
+        if (!keyword.equals(CANCEL_INPUT)) {
             presenter.showSearchResults(financeUseCase.searchTransactions(keyword), keyword);
         }
     }
@@ -129,18 +162,14 @@ public class FinanceView {
         String input = InputUtil.input("Pilih");
         // Akhiri baris prompt agar hasil pengurutan tampil di baris berikutnya
         System.out.println();
-        if (input.equals("x")) {
+        if (input.equals(CANCEL_INPUT)) {
             return;
         }
 
-        // Konversi input angka ke enum domain
-        SortOption option = mapSortOption(input);
-        if (option == null) {
-            presenter.showInvalidSortOption();
-            return;
-        }
-
-        presenter.showSortedTransactions(financeUseCase.sortTransactions(option));
+        // Konversi input angka ke enum domain; pilihan tidak dikenal ditolak
+        mapSortOption(input).ifPresentOrElse(
+                option -> presenter.showSortedTransactions(financeUseCase.sortTransactions(option)),
+                presenter::showInvalidSortOption);
     }
 
     /**
@@ -169,14 +198,12 @@ public class FinanceView {
         }
     }
 
-    /** Memetakan pilihan menu (1-4) ke {@link SortOption} domain. */
-    private SortOption mapSortOption(String input) {
-        return switch (input) {
-            case "1" -> SortOption.AMOUNT_ASC;
-            case "2" -> SortOption.AMOUNT_DESC;
-            case "3" -> SortOption.INCOME_FIRST;
-            case "4" -> SortOption.EXPENSE_FIRST;
-            default -> null;
-        };
+    /**
+     * Memetakan pilihan menu pengurutan ke {@link SortOption} domain.
+     *
+     * @return opsi pengurutan, atau kosong jika pilihan tidak dikenali
+     */
+    private Optional<SortOption> mapSortOption(String input) {
+        return Optional.ofNullable(SORT_OPTIONS.get(input));
     }
 }

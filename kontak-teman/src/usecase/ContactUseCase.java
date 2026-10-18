@@ -6,6 +6,7 @@ import domain.exception.EntityNotFoundException;
 import domain.exception.ValidationException;
 import domain.repository.IContactRepository;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -14,6 +15,15 @@ import java.util.Optional;
  * domain jika operasi tidak valid atau data tidak ditemukan.
  */
 public class ContactUseCase {
+    /** Pesan validasi: nama kontak tidak boleh kosong. */
+    private static final String ERR_NAME_EMPTY = "Nama kontak tidak boleh kosong";
+
+    /** Pesan validasi: nomor telepon tidak boleh kosong. */
+    private static final String ERR_PHONE_EMPTY = "Nomor telepon tidak boleh kosong";
+
+    /** Pesan validasi: email tidak boleh kosong. */
+    private static final String ERR_EMAIL_EMPTY = "Email tidak boleh kosong";
+
     /** Port repository yang di-inject dari luar (Dependency Inversion). */
     private final IContactRepository contactRepository;
 
@@ -28,9 +38,9 @@ public class ContactUseCase {
 
     /** Menambahkan kontak baru setelah validasi nama, telepon, dan email. */
     public Contact addContact(String name, String phone, String email) throws ValidationException {
-        requireFilled(name, "Nama kontak tidak boleh kosong");
-        requireFilled(phone, "Nomor telepon tidak boleh kosong");
-        requireFilled(email, "Email tidak boleh kosong");
+        requireFilled(name, ERR_NAME_EMPTY);
+        requireFilled(phone, ERR_PHONE_EMPTY);
+        requireFilled(email, ERR_EMAIL_EMPTY);
         return contactRepository.save(name, phone, email);
     }
 
@@ -55,13 +65,13 @@ public class ContactUseCase {
 
         // Validasi semua field yang diubah sebelum ada perubahan yang diterapkan
         if (name != null) {
-            requireFilled(name, "Nama kontak tidak boleh kosong");
+            requireFilled(name, ERR_NAME_EMPTY);
         }
         if (phone != null) {
-            requireFilled(phone, "Nomor telepon tidak boleh kosong");
+            requireFilled(phone, ERR_PHONE_EMPTY);
         }
         if (email != null) {
-            requireFilled(email, "Email tidak boleh kosong");
+            requireFilled(email, ERR_EMAIL_EMPTY);
         }
 
         Contact contact = found.get();
@@ -80,8 +90,8 @@ public class ContactUseCase {
 
     /** Mencari kontak yang namanya mengandung kata kunci (case-insensitive). */
     public List<Contact> searchContacts(String keyword) {
-        String lowerKeyword = keyword.toLowerCase();
-        return contactRepository.findBy(contact -> contact.getName().toLowerCase().contains(lowerKeyword));
+        String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
+        return contactRepository.findBy(contact -> contact.getName().toLowerCase(Locale.ROOT).contains(lowerKeyword));
     }
 
     /** Mengurutkan kontak sesuai kriteria {@link SortOption} yang dipilih. */

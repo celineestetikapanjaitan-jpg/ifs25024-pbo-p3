@@ -12,6 +12,21 @@ import usecase.GuestUseCase;
  * Layer ini tidak mengandung logika bisnis - hanya menangani interaksi user.
  */
 public class GuestView {
+    /** Input yang membatalkan operasi pada sebuah form. */
+    private static final String CANCEL_INPUT = "x";
+
+    /** Input pada menu utama untuk keluar dari aplikasi. */
+    private static final String MENU_EXIT = "x";
+
+    /** Kode pilihan menu utama: daftarkan tamu. */
+    private static final String MENU_REGISTER = "1";
+
+    /** Kode pilihan menu utama: cari. */
+    private static final String MENU_SEARCH = "2";
+
+    /** Kode pilihan menu utama: hapus. */
+    private static final String MENU_REMOVE = "3";
+
     /** Use case yang menjalankan operasi bisnis. */
     private final GuestUseCase guestUseCase;
 
@@ -34,10 +49,10 @@ public class GuestView {
             String input = InputUtil.input("Pilih");
             System.out.println();
             switch (input) {
-                case "1" -> registerGuest();
-                case "2" -> searchGuest();
-                case "3" -> removeGuest();
-                case "x" -> running = false;
+                case MENU_REGISTER -> registerGuest();
+                case MENU_SEARCH -> searchGuest();
+                case MENU_REMOVE -> removeGuest();
+                case MENU_EXIT -> running = false;
                 default -> presenter.showInvalidChoice();
             }
 
@@ -60,12 +75,12 @@ public class GuestView {
     private void registerGuest() {
         System.out.println("[Mendaftarkan Tamu]");
         String name = InputUtil.input("Nama (x Jika Batal)");
-        if (name.equals("x")) {
+        if (name.equals(CANCEL_INPUT)) {
             return;
         }
 
         String purpose = InputUtil.input("Tujuan Kunjungan (x Jika Batal)");
-        if (purpose.equals("x")) {
+        if (purpose.equals(CANCEL_INPUT)) {
             return;
         }
 
@@ -81,7 +96,7 @@ public class GuestView {
         System.out.println("[Menghapus Tamu]");
         String strId = InputUtil.input("[ID Tamu] yang dihapus (x Jika Batal)");
 
-        if (strId.equals("x")) {
+        if (strId.equals(CANCEL_INPUT)) {
             return;
         }
 
@@ -101,7 +116,7 @@ public class GuestView {
         System.out.println("[Mencari Tamu]");
         String keyword = InputUtil.input("Nama (x Jika Batal)");
 
-        if (!keyword.equals("x")) {
+        if (!keyword.equals(CANCEL_INPUT)) {
             presenter.showSearchResults(guestUseCase.searchGuests(keyword), keyword);
         }
     }

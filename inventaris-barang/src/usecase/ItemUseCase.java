@@ -6,6 +6,7 @@ import domain.exception.EntityNotFoundException;
 import domain.exception.ValidationException;
 import domain.repository.IItemRepository;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -13,32 +14,44 @@ import java.util.Optional;
  * Bebas dari I/O konsol dan melempar checked exception domain.
  */
 public class ItemUseCase {
+    /** Pesan validasi: nama barang tidak boleh kosong. */
+    private static final String ERR_NAME_EMPTY = "Nama barang tidak boleh kosong";
+
+    /** Pesan saat stok tidak berupa angka lebih dari 0. */
+    private static final String ERR_INVALID_QUANTITY = "Jumlah stok tidak valid";
+
+    /** Pesan validasi: kategori barang tidak boleh kosong. */
+    private static final String ERR_CATEGORY_EMPTY = "Kategori barang tidak boleh kosong";
+
+    /** Pesan saat ID tidak lebih dari 0. */
+    private static final String ERR_INVALID_ID = "ID tidak valid";
+
+    /** Port repository yang di-inject dari luar (Dependency Inversion). */
     private final IItemRepository itemRepository;
 
     public ItemUseCase(IItemRepository itemRepository) {
         this.itemRepository = itemRepository;
     }
 
+    /** Mengambil semua barang yang tersedia. */
     public List<Item> getAllItems() {
         return itemRepository.findAll();
     }
 
+    /** Menambahkan barang baru setelah validasi nama, stok, dan kategori. */
     public Item addItem(String name, int quantity, String category) throws ValidationException {
-        if (name == null || name.trim().isEmpty()) {
-            throw new ValidationException("Nama barang tidak boleh kosong");
-        }
+        requireFilled(name, ERR_NAME_EMPTY);
         if (quantity <= 0) {
-            throw new ValidationException("Jumlah stok tidak valid");
+            throw new ValidationException(ERR_INVALID_QUANTITY);
         }
-        if (category == null || category.trim().isEmpty()) {
-            throw new ValidationException("Kategori barang tidak boleh kosong");
-        }
+        requireFilled(category, ERR_CATEGORY_EMPTY);
         return itemRepository.save(name.trim(), quantity, category.trim());
     }
 
+    /** Mengubah stok barang secara parsial; stok {@code null} berarti tidak diubah. */
     public void updateStock(int id, Integer quantity) throws EntityNotFoundException, ValidationException {
         if (id <= 0) {
-            throw new ValidationException("ID tidak valid");
+            throw new ValidationException(ERR_INVALID_ID);
         }
         Optional<Item> found = itemRepository.findById(id);
         if (found.isEmpty()) {
@@ -46,7 +59,7 @@ public class ItemUseCase {
         }
         if (quantity != null) {
             if (quantity <= 0) {
-                throw new ValidationException("Jumlah stok tidak valid");
+                throw new ValidationException(ERR_INVALID_QUANTITY);
             }
             Item item = found.get();
             item.changeQuantity(quantity);
@@ -54,9 +67,10 @@ public class ItemUseCase {
         }
     }
 
+    /** Menghapus barang berdasarkan ID; melempar exception jika tidak ditemukan. */
     public void removeItem(int id) throws EntityNotFoundException, ValidationException {
         if (id <= 0) {
-            throw new ValidationException("ID tidak valid");
+            throw new ValidationException(ERR_INVALID_ID);
         }
         boolean deleted = itemRepository.deleteById(id);
         if (!deleted) {
@@ -64,14 +78,16 @@ public class ItemUseCase {
         }
     }
 
+    /** Mencari barang yang namanya mengandung kata kunci (case-insensitive). */
     public List<Item> searchItems(String keyword) {
         if (keyword == null) {
             return List.of();
         }
-        String lowerKeyword = keyword.toLowerCase();
-        return itemRepository.findBy(i -> i.getName().toLowerCase().contains(lowerKeyword));
+        String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
+        return itemRepository.findBy(i -> i.getName().toLowerCase(Locale.ROOT).contains(lowerKeyword));
     }
 
+    /** Mengurutkan barang sesuai kriteria {@link SortOption} yang dipilih. */
     public List<Item> sortItems(SortOption option) {
         if (option == null) {
             return List.of();
@@ -79,5 +95,12 @@ public class ItemUseCase {
         return itemRepository.findAll().stream()
                 .sorted(option.comparator())
                 .toList();
+    }
+
+    /** Memastikan nilai tidak null/kosong; melempar {@link ValidationException} jika tidak. */
+    private void requireFilled(String value, String message) throws ValidationException {
+        if (value == null || value.trim().isEmpty()) {
+            throw new ValidationException(message);
+        }
     }
 }

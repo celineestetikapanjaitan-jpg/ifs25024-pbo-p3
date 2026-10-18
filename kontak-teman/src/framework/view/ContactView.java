@@ -5,6 +5,8 @@ import domain.entity.SortOption;
 import domain.exception.EntityNotFoundException;
 import domain.exception.ValidationException;
 import framework.util.InputUtil;
+import java.util.Map;
+import java.util.Optional;
 import usecase.ContactUseCase;
 
 /**
@@ -13,6 +15,32 @@ import usecase.ContactUseCase;
  * Layer ini tidak mengandung logika bisnis - hanya menangani interaksi user.
  */
 public class ContactView {
+    /** Input yang membatalkan operasi pada sebuah form. */
+    private static final String CANCEL_INPUT = "x";
+
+    /** Input pada menu utama untuk keluar dari aplikasi. */
+    private static final String MENU_EXIT = "x";
+
+    /** Kode pilihan menu utama: tambah. */
+    private static final String MENU_ADD = "1";
+
+    /** Kode pilihan menu utama: ubah. */
+    private static final String MENU_UPDATE = "2";
+
+    /** Kode pilihan menu utama: cari. */
+    private static final String MENU_SEARCH = "3";
+
+    /** Kode pilihan menu utama: urutkan. */
+    private static final String MENU_SORT = "4";
+
+    /** Kode pilihan menu utama: hapus. */
+    private static final String MENU_REMOVE = "5";
+
+    /** Pilihan menu pengurutan beserta opsi pengurutan domain yang dipetakan. */
+    private static final Map<String, SortOption> SORT_OPTIONS = Map.of(
+            "1", SortOption.NAME_ASC,
+            "2", SortOption.NAME_DESC);
+
     /** Use case yang menjalankan operasi bisnis. */
     private final ContactUseCase contactUseCase;
 
@@ -35,12 +63,12 @@ public class ContactView {
             String input = InputUtil.input("Pilih");
             System.out.println();
             switch (input) {
-                case "1" -> addContact();
-                case "2" -> updateContact();
-                case "3" -> searchContact();
-                case "4" -> sortContact();
-                case "5" -> removeContact();
-                case "x" -> running = false;
+                case MENU_ADD -> addContact();
+                case MENU_UPDATE -> updateContact();
+                case MENU_SEARCH -> searchContact();
+                case MENU_SORT -> sortContact();
+                case MENU_REMOVE -> removeContact();
+                case MENU_EXIT -> running = false;
                 default -> presenter.showInvalidChoice();
             }
 
@@ -66,7 +94,7 @@ public class ContactView {
         System.out.println("[Menambah Kontak]");
         String name = InputUtil.input("Nama (x Jika Batal)");
         // Isian kosong ditolak diam-diam supaya prompt berikutnya tidak menelan input baris selanjutnya
-        if (name.equals("x") || name.isBlank()) {
+        if (name.equals(CANCEL_INPUT) || name.isBlank()) {
             return;
         }
 
@@ -92,7 +120,7 @@ public class ContactView {
         System.out.println("[Mengubah Kontak]");
         String strId = InputUtil.input("ID Kontak yang diubah (x Jika Batal)");
 
-        if (strId.equals("x")) {
+        if (strId.equals(CANCEL_INPUT)) {
             return;
         }
 
@@ -125,7 +153,7 @@ public class ContactView {
         System.out.println("[Menghapus Kontak]");
         String strId = InputUtil.input("[ID Kontak] yang dihapus (x Jika Batal)");
 
-        if (strId.equals("x")) {
+        if (strId.equals(CANCEL_INPUT)) {
             return;
         }
 
@@ -145,7 +173,7 @@ public class ContactView {
         System.out.println("[Mencari Kontak]");
         String keyword = InputUtil.input("Kata Kunci (x Jika Batal)");
 
-        if (!keyword.equals("x")) {
+        if (!keyword.equals(CANCEL_INPUT)) {
             presenter.showSearchResults(contactUseCase.searchContacts(keyword), keyword);
         }
     }
@@ -161,18 +189,14 @@ public class ContactView {
         String input = InputUtil.input("Pilih");
         // Akhiri baris prompt agar hasil pengurutan tampil di baris berikutnya
         System.out.println();
-        if (input.equals("x")) {
+        if (input.equals(CANCEL_INPUT)) {
             return;
         }
 
-        // Konversi input angka ke enum domain
-        SortOption option = mapSortOption(input);
-        if (option == null) {
-            presenter.showInvalidSortOption();
-            return;
-        }
-
-        presenter.showSortedContacts(contactUseCase.sortContacts(option));
+        // Konversi input angka ke enum domain; pilihan tidak dikenal ditolak
+        mapSortOption(input).ifPresentOrElse(
+                option -> presenter.showSortedContacts(contactUseCase.sortContacts(option)),
+                presenter::showInvalidSortOption);
     }
 
     /**
@@ -193,12 +217,12 @@ public class ContactView {
         return value.isBlank() ? null : value;
     }
 
-    /** Memetakan pilihan menu (1-2) ke {@link SortOption} domain. */
-    private SortOption mapSortOption(String input) {
-        return switch (input) {
-            case "1" -> SortOption.NAME_ASC;
-            case "2" -> SortOption.NAME_DESC;
-            default -> null;
-        };
+    /**
+     * Memetakan pilihan menu pengurutan ke {@link SortOption} domain.
+     *
+     * @return opsi pengurutan, atau kosong jika pilihan tidak dikenali
+     */
+    private Optional<SortOption> mapSortOption(String input) {
+        return Optional.ofNullable(SORT_OPTIONS.get(input));
     }
 }

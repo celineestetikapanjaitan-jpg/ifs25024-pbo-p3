@@ -6,6 +6,7 @@ import usecase.FinanceUseCase;
 
 /** Composition Root aplikasi catatan keuangan. */
 public class App {
+    /** Menyusun seluruh dependency lalu menjalankan loop menu aplikasi. */
     public static void main(String[] args) {
         ITransactionRepository repository = new TransactionRepository();
         FinanceUseCase useCase = new FinanceUseCase(repository);

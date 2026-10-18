@@ -19,12 +19,14 @@ public enum SortOption {
     /** Jumlah stok terbesar ditampilkan lebih dulu. */
     QUANTITY_DESC(Comparator.comparingInt(Item::getQuantity).reversed());
 
+    /** Comparator yang digunakan untuk mengurutkan daftar barang. */
     private final Comparator<Item> comparator;
 
     SortOption(Comparator<Item> comparator) {
         this.comparator = comparator;
     }
 
+    /** Mengembalikan comparator yang sesuai dengan opsi ini. */
     public Comparator<Item> comparator() {
         return comparator;
     }

@@ -7,6 +7,7 @@ import domain.exception.EntityNotFoundException;
 import domain.exception.ValidationException;
 import domain.repository.ITransactionRepository;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Use case yang menangani logika bisnis catatan keuangan.
@@ -14,6 +15,12 @@ import java.util.List;
  * domain jika operasi tidak valid atau data tidak ditemukan.
  */
 public class FinanceUseCase {
+    /** Pesan validasi: keterangan tidak boleh kosong. */
+    private static final String ERR_DESCRIPTION_EMPTY = "Keterangan tidak boleh kosong";
+
+    /** Pesan saat jumlah uang tidak berupa angka lebih dari 0. */
+    private static final String ERR_INVALID_AMOUNT = "Jumlah tidak valid";
+
     /** Port repository yang di-inject dari luar (Dependency Inversion). */
     private final ITransactionRepository transactionRepository;
 
@@ -29,11 +36,9 @@ public class FinanceUseCase {
     /** Menambahkan transaksi baru setelah validasi keterangan dan jumlah. */
     public Transaction addTransaction(String description, long amount, TransactionType type)
             throws ValidationException {
-        if (description == null || description.trim().isEmpty()) {
-            throw new ValidationException("Keterangan tidak boleh kosong");
-        }
+        requireFilled(description, ERR_DESCRIPTION_EMPTY);
         if (amount <= 0) {
-            throw new ValidationException("Jumlah tidak valid");
+            throw new ValidationException(ERR_INVALID_AMOUNT);
         }
         return transactionRepository.save(description, amount, type);
     }
@@ -48,9 +53,9 @@ public class FinanceUseCase {
 
     /** Mencari transaksi yang keterangannya mengandung kata kunci (case-insensitive). */
     public List<Transaction> searchTransactions(String keyword) {
-        String lowerKeyword = keyword.toLowerCase();
+        String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
         return transactionRepository.findBy(
-                transaction -> transaction.getDescription().toLowerCase().contains(lowerKeyword));
+                transaction -> transaction.getDescription().toLowerCase(Locale.ROOT).contains(lowerKeyword));
     }
 
     /** Mengurutkan transaksi sesuai kriteria {@link SortOption} yang dipilih. */
@@ -65,5 +70,12 @@ public class FinanceUseCase {
         return transactionRepository.findAll().stream()
                 .mapToLong(Transaction::signedAmount)
                 .sum();
+    }
+
+    /** Memastikan nilai tidak null/kosong; melempar {@link ValidationException} jika tidak. */
+    private void requireFilled(String value, String message) throws ValidationException {
+        if (value == null || value.trim().isEmpty()) {
+            throw new ValidationException(message);
+        }
     }
 }

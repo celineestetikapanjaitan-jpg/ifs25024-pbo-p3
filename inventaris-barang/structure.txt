@@ -1,0 +1,36 @@
+inventaris-barang/
+├── src
+│   ├── adapter
+│   │   ├── presenter
+│   │   │   └── ItemPresenter.java
+│   │   └── repository
+│   │       ├── InMemoryRepository.java
+│   │       └── ItemRepository.java
+│   ├── domain
+│   │   ├── entity
+│   │   │   ├── Item.java
+│   │   │   └── SortOption.java
+│   │   ├── exception
+│   │   │   ├── DomainException.java
+│   │   │   ├── EntityNotFoundException.java
+│   │   │   └── ValidationException.java
+│   │   └── repository
+│   │       ├── IItemRepository.java
+│   │       └── IRepository.java
+│   ├── framework
+│   │   ├── util
+│   │   │   └── InputUtil.java
+│   │   └── view
+│   │       └── ItemView.java
+│   ├── usecase
+│   │   └── ItemUseCase.java
+│   └── App.java
+├── test
+│   └── usecase
+│       └── ItemUseCaseTest.java
+├── test-cases
+│   ├── TC-01.tc
+│   ├── TC-02.tc
+│   ├── TC-03.tc
+│   └── TC-04.tc
+└── .gitignore
